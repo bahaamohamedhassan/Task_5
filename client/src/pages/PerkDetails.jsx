@@ -52,6 +52,7 @@ export default function PerkDetails() {
   const [perk, setPerk] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -66,9 +67,26 @@ export default function PerkDetails() {
       })
   }, [id])
 
- // TODO 2: Implement delete functionality with a window confirm dialog 
+  // Delete functionality with window confirm dialog
   async function handleDelete() {
-   
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${perk.title}"? This action cannot be undone.`
+    )
+    
+    if (!confirmed) return
+    
+    setDeleting(true)
+    setError('')
+    
+    try {
+      await api.delete(`/perks/${id}`)
+      // Navigate back to perks list after successful deletion
+      nav('/perks')
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to delete perk')
+      setDeleting(false)
+    }
   }
 
   if (loading) {
@@ -93,7 +111,6 @@ export default function PerkDetails() {
   const theme = categoryThemes[perk.category] || categoryThemes.other
 
   return (
-    //TODO 3: Implement delete perk handler
     <div className="max-w-3xl mx-auto">
       {/* Back button */}
       <div className="mb-4">
@@ -192,11 +209,12 @@ export default function PerkDetails() {
             Edit Perk
           </Link>
           <button
-            
-            className="btn bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 font-semibold px-6 py-3 flex items-center gap-2"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="btn bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 font-semibold px-6 py-3 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>delete</span>
-            Delete Perk
+            {deleting ? 'Deleting...' : 'Delete Perk'}
           </button>
         </div>
       </div>
